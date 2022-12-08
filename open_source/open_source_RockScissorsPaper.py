@@ -34,7 +34,9 @@ import cv2
 import mediapipe as mp  
 from PIL import ImageFont, ImageDraw, Image
 import numpy as np      
+import time
 
+max_num_hands = 2
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -66,6 +68,18 @@ with mp_hands.Hands(
     # pass by reference.
     image.flags.writeable = False
     results = hands.process(image)
+    if results.multi_hand_landmarks != None:
+      for hand in results.multi_handedness:
+        #print(hand)
+        #print(hand.classification)
+        #print(hand.classification[0])
+        handType=hand.classification[0].label
+        index = hand.classification[0].index
+        
+        
+
+
+
 
 
     # Draw the hand annotations on the image.
@@ -114,23 +128,121 @@ with mp_hands.Hands(
         image = Image.fromarray(image)
         draw = ImageDraw.Draw(image)
 
-       
+
+        rows = 3
+        cols = 3
+        result = [[0 for j in range(cols)] for i in range(rows)]
+         
         text = ""
-        if thumb_finger_state == 1 and index_finger_state == 1 and middle_finger_state == 1 and ring_finger_state == 1 and pinky_finger_state == 1:
-          text = "보"
-        elif thumb_finger_state == 1 and index_finger_state == 1 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
-          text = "가위"
-        elif   index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
-          text = "주먹"
+        text1 = 0
+        text2 = ""
+        text3 = ""
+        text4 = ""                                                                                       
+        
+        def answer(index):
+          if thumb_finger_state == 1 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
+            if index == 0:
+              print("왼손 엄지")
+              result[index][0] = 1
+              print(handType)
+              print(index)
+            elif index == 1:
+              print("오른손 엄지")
+              result[index][0] = 1
+              print(handType)
+              print(index)
+          elif thumb_finger_state == 0 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 1:
+            if index == 0:
+              result[index][1] = 1
+              print("왼손 새끼")
+              print(handType)
+              print(index)
+            elif index == 1:
+              result[index][1] = 1
+              text = "오른손 새끼"
+              print("오른손 새끼")
+              print(handType)
+              print(index)
+              
+        def left_hand():
+          if thumb_finger_state == 1 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
+            print("왼손 엄지")
+            result[index][0] = 1
+          elif thumb_finger_state == 0 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 1:
+            result[index][1] = 1
+            print("왼손 새끼")
+            
+        def right_hand():
+          if thumb_finger_state == 1 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
+            print("오른손 엄지")
+            result[index][0] = 1
+          elif thumb_finger_state == 0 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 1:
+            result[index][1] = 1
+            print("오른손 새끼")
+              
+        #if index == 0:
+        #  if thumb_finger_state == 1 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
+        #    print("왼손 엄지")
+        #    result[index][0] = 1
+        #  #print(results)
+        #    print(handType)
+        #    print(index)
+        #  #print(label)
+        #  elif thumb_finger_state == 0 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 1:
+        #    result[index][1] = 1
+        #    print("왼손 새끼")
+        #    print(handType)
+        #    print(index)
+        #elif index == 1:
+        #  if thumb_finger_state == 1 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 0:
+        #    print("오른손 엄지")
+        #    result[index][0] = 1
+        #    print(handType)
+        #    print(index)
+        #  elif   thumb_finger_state == 0 and index_finger_state == 0 and middle_finger_state == 0 and ring_finger_state == 0 and pinky_finger_state == 1:
+        #    result[index][1] = 1
+        #    text = "오른손 새끼"
+        #    print("오른손 새끼")
+        #    print(handType)
+        #    print(index)
+        
+        answer(index)
+        if index == 0:
+          left_hand()
+        elif index == 1:
+          right_hand()
+
+        if result[0][0] == 1 and result[1][1] == 1:
+          text = "정답"
+          print("정답")
+        elif result[0][1] == 1 and result[1][0] == 1:
+          text = "정답"
+          print("정답")
+          
+      
+
 
         w, h = font.getsize(text)
 
         x = 50
         y = 50
-
+        x1 = 200
+        y1 = 50
         draw.rectangle((x, y, x + w, y + h), fill='black')
         draw.text((x, y),  text, font=font, fill=(255, 255, 255))
         image = np.array(image)
+        
+        draw.rectangle((x1, y1, x1 + w, y1 + h), fill='black')
+        draw.text((x1, y1),  text2, font=font, fill=(255, 255, 255))
+        image = np.array(image)
+        
+        #draw.rectangle((x, y, x + w, y + h), fill='black')
+        #draw.text((x, y),  text3, font=font, fill=(255, 255, 255))
+        #image = np.array(image)
+        
+        #draw.rectangle((x, y, x + w, y + h), fill='black')
+        #draw.text((x, y),  text4, font=font, fill=(255, 255, 255))
+        #image = np.array(image)
 
 
         # 손가락 뼈대를 그려줍니다.
@@ -140,6 +252,9 @@ with mp_hands.Hands(
             mp_hands.HAND_CONNECTIONS,
             mp_drawing_styles.get_default_hand_landmarks_style(),
             mp_drawing_styles.get_default_hand_connections_style())
+        
+      
+      
 
     cv2.imshow('MediaPipe Hands', image)
 
